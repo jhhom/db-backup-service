@@ -1,0 +1,9 @@
+node_modules/
+knexfile.ts
+packages/backend/assets/**/*
+.DS_Store
+.next
+packages/cron/credentials.json
+packages/cron/token.json
+packages/cron/dumps
+logs
