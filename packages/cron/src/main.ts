@@ -4,24 +4,65 @@ import { uploadFileToDrive } from "~/uploads/google-drive";
 import pino, { Logger } from "pino";
 import path from "path";
 
-import { zodiosContext } from "@zodios/express";
-import { logApi } from "@shared/api";
-import readline from "readline";
-import fs from "fs";
-import z from "zod";
+import { loadConfig } from "~/config";
+import { initApi } from "~/api/api";
 
-const ctx = zodiosContext();
+import { CONFIG } from "@shared/config";
 
-function initBackup(logger: Logger<string>) {
-  return function backup() {
+function main() {
+  const LOG_FILE_PATH = "logs/app.log";
+  const config = loadConfig("config/config.json");
+
+  // 1. Initialize logger
+  // 2. Setup cron
+  // 3. Setup API server
+
+  // 1. Initialize logger
+  // -----------------------------------------------
+  const fileTransport = pino.transport({
+    target: "pino/file",
+    options: { destination: LOG_FILE_PATH },
+  });
+  const logger = pino({}, fileTransport);
+
+  // 2. Setup cron
+  // -----------------------------------------------
+  const backup = initBackupService(
+    logger,
+    "ims",
+    config.google_drive.folder_id
+  );
+
+  Cron(config.cron.backup_interval, backup);
+
+  // 3. Setup API server
+  // -----------------------------------------------
+  const apiApp = initApi({ pathToLogFile: LOG_FILE_PATH, config });
+
+  apiApp.listen(CONFIG.API_URL.port, () => {
+    console.log(`⚡️ API listening at port ${CONFIG.API_URL.port}`);
+  });
+
+  console.log("⚡️ Cron started");
+}
+
+main();
+
+function initBackupService(
+  logger: Logger<string>,
+  databaseName: string,
+  driveFolderId: string
+) {
+  return async function backup() {
     try {
-      const dumpFilename = backupPostgreSQLToFile("ims", "dumps", logger);
+      const dumpFilename = backupPostgreSQLToFile(databaseName, "dumps");
+      const pathToDumpfile = path.join("dumps", dumpFilename);
 
-      uploadFileToDrive(path.join("dumps", dumpFilename));
+      const folder = await uploadFileToDrive(driveFolderId, pathToDumpfile);
       logger.info({
         backup: "success",
         drive: {
-          folder: "dumps",
+          folder: folder.folderName,
           filename: dumpFilename,
         },
       });
@@ -40,57 +81,3 @@ function initBackup(logger: Logger<string>) {
     }
   };
 }
-
-function readPinoLogs(file: string) {
-  const insteam = fs.createReadStream(file, { encoding: "utf-8" });
-
-  const rl = readline.createInterface({
-    input: insteam,
-  });
-
-  rl.on("line", function (line) {
-    console.log(JSON.parse(line));
-  });
-}
-
-function readPinoLogs2(file: string) {
-  const d = fs.readFileSync(file, { encoding: "utf-8" });
-  const lines = d.split(/\r?\n/);
-
-  for (const l of lines) {
-    if (l === "") {
-      continue;
-    }
-    console.log(JSON.parse(l));
-  }
-}
-
-function main() {
-  const apiApp = ctx.app(logApi);
-
-  const fileTransport = pino.transport({
-    target: "pino/file",
-    options: { destination: `logs/app.log` },
-  });
-  const logger = pino({}, fileTransport);
-
-  const backup = initBackup(logger);
-
-  const job = Cron("*/1 * * * *", backup);
-
-  console.log("⚡️ Cron started");
-
-  apiApp.get("/logs", function (req, res) {});
-
-  apiApp.listen(8000, () => {
-    console.log("⚡️ API listening at port 8000");
-  });
-}
-
-function main2() {
-  readPinoLogs2("logs/app.log");
-}
-
-// main();
-
-main2();

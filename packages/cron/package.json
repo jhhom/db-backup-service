@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "script": "tsx src/main.ts",
+    "dev": "tsx src/main.ts",
     "convert": "tsx src/convert-hugo-book-to-nextra/main.ts",
-    "build": "tsc",
-    "start": "node src/main.js",
+    "build": "tsc && tsc-alias",
+    "start": "node build/cron/src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:introspect": "kysely-codegen --camel-case --dialect postgres --out-file src/core/schema.ts"
   },
@@ -19,6 +19,7 @@
     "kysely-codegen": "^0.10.1",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.8",
     "typescript": "^4.9.3"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "cors": "^2.8.5",
     "croner": "^8.0.0",
     "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "googleapis": "105",

@@ -10,9 +10,9 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { Toaster } from "react-hot-toast";
-import QueryProvider from "~/providers/query";
 import { useLayoutEffect } from "react";
 import { HomePage } from "~/pages/HomePage";
+import { TablePage } from "~/pages/TablePage";
 
 // Create a root route
 function Root() {
@@ -35,8 +35,15 @@ export const indexRoute = new Route({
   component: HomePage,
 });
 
+const tableRoute = new Route({
+  id: "table",
+  getParentRoute: () => rootRoute,
+  path: "/table",
+  component: TablePage,
+});
+
 // Create the route tree using your routes
-export const routeTree = rootRoute.addChildren([indexRoute]);
+export const routeTree = rootRoute.addChildren([indexRoute, tableRoute]);
 
 export const router = new Router({ routeTree });
 

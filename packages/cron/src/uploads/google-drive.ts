@@ -15,8 +15,16 @@ const SCOPES = [
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
+const TOKEN_PATH = path.join(
+  process.cwd(),
+  "config/google-drive",
+  "token.json"
+);
+const CREDENTIALS_PATH = path.join(
+  process.cwd(),
+  "config/google-drive",
+  "credentials.json"
+);
 
 /**
  * Reads previously authorized credentials from the save file.
@@ -73,13 +81,21 @@ async function authorize(): Promise<OAuth2Client> {
   return client;
 }
 
-async function uploadFiles(authClient: OAuth2Client, file: string) {
+async function uploadFiles(
+  authClient: OAuth2Client,
+  driveFolderId: string,
+  file: string
+): Promise<{ folderName: string }> {
   const drive = google.drive({ version: "v3", auth: authClient });
+
+  const folderData = await drive.files.get({
+    fileId: driveFolderId,
+  });
 
   const res = await drive.files.create({
     requestBody: {
       name: `${path.basename(file)}`,
-      parents: ["1q1EEluKy2OViRzhRCqdansYaThmc48uU"],
+      parents: [driveFolderId],
     },
     fields: "id",
     media: {
@@ -91,10 +107,15 @@ async function uploadFiles(authClient: OAuth2Client, file: string) {
   console.log(
     `Uploaded ${res.data.name} (${res.data.id}), size: ${res.data.size}`
   );
+
+  return { folderName: folderData.data.name ?? "" };
 }
 
-export function uploadFileToDrive(file: string) {
-  authorize()
-    .then((client) => uploadFiles(client, file))
-    .catch(console.error);
+export async function uploadFileToDrive(
+  driveFolderId: string,
+  file: string
+): Promise<{ folderName: string }> {
+  const client = await authorize();
+  const folder = await uploadFiles(client, driveFolderId, file);
+  return folder;
 }

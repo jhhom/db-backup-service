@@ -1,0 +1,11 @@
+{
+  "postgresql": {
+    "database": "ims"
+  },
+  "cron": {
+    "backup_interval": "*/1 * * * *"
+  },
+  "google_drive": {
+    "folder_id": "abcdfeffsfafd"
+  }
+}

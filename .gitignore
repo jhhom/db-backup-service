@@ -1,9 +1,14 @@
 node_modules/
 knexfile.ts
-packages/backend/assets/**/*
 .DS_Store
 .next
-packages/cron/credentials.json
-packages/cron/token.json
+
+packages/cron/config/google-drive/credentials.json
+packages/cron/config/google-drive/token.json
+packages/cron/config/config.json
 packages/cron/dumps
+packages/cron/build
+packages/cron/ecosystem.config.js
+
+packages/shared/config.ts
 logs

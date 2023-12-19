@@ -1,18 +1,10 @@
-import {
-  Outlet,
-  RouterProvider,
-  Link,
-  Router,
-  Route,
-  RootRoute,
-  redirect,
-} from "@tanstack/react-router";
-import QueryProvider from "~/providers/query";
+import { RouterProvider } from "@tanstack/react-router";
 import { router } from "~/routes/routes";
 
 import { RowData } from "@tanstack/react-table";
 
 import "./markdown-content.css";
+import QueryProvider from "~/providers/query";
 
 // Create the router using your route tree
 declare module "@tanstack/react-table" {

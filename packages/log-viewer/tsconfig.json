@@ -19,15 +19,9 @@
         "~/*": [
             "./src/*"
           ],
-          "@backend/*": [
-              "../backend/src/*"
+          "@shared/*": [
+              "../shared/*"
           ],
-          "@api-contract/*": [
-              "../shared/api-contract/*"
-          ],
-          "@config/*": [
-              "../shared/config/*"
-          ]
     }
   },
   "include": ["src", "src/pages/common/components/Table/.tsx"],

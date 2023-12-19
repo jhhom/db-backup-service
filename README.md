@@ -1,64 +1,54 @@
-# Table of Contents
+# Database Backup Service
 
-1. [Main Backend](#1-main-backend)
+This is a cron service that periodically dumps PostgreSQL database, gzips it and uploads to the Google Drive.
 
-   1.1 [Working with database](#11-working-with-database)
+A web interface is also available to view the status of each backup so that failure can be quickly and conveniently spotted.
 
-2. [Project general](#2-project-general)
+This service is suitable to be used for automatic backup of self-hosted PostgreSQL database.
 
-Some text
-{: #hello-world}
+## User-interface
 
-<h1 id="1-main-backend">1. Main Backend <a href="#table-of-contents">🔼</a></h1>
+![](docs/screenshot.png)
 
-<h2 id="1.1-working-with-database">1.1 Working with database <a href="#table-of-contents">🔼</a></h2>
+## Configuration
 
-### To run migration {#run-migration}
+There are 3 configurations that needs to be done.
 
-Run migration at the project root directory.
+**Configuration 1: `token.json` (`packages/cron/config/google-drive/token.json`).**
 
-`knex migrate:make create_volunteers_table --knexfile knexfile.cjs`
+The Google Drive tokens. This need to be obtained by running the script locally in `packages/cron`. It cannot be obtained from SSH at the server, because it needs access to the browser.
 
-`knex migrate:latest --knexfile knexfile.cjs`
+To obtain this, you need to run the script with the config `packages/cron/google-drive/credentials.json`. `credentials.json` is downloaded from Google Cloud Console
 
-`knex migrate:latest --knexfile knexfile.cjs --env=test`
+![](docs/ark-20231219160520.png)
 
-`knex migrate:up --knexfile knexfile.cjs`
+**Configuration 2. `config.json` (`packages/cron/config/config.json`). The general config for the cron.**
 
-`knex migrate:down --knexfile knexfile.cjs`
+There are 3 settings:
 
-### Introspecting the database
+1.  `postgresql.database`: Name of the database to backup
+2.  `cron.backup_interval`: The interval to perform the backup based on https://crontab.guru/
+3.  `google_drive.folder_id`: The id of the folder on Google Drive to store the dump file
 
-Run this command in the `packages/backend` directory.
+    - This can be obtained as follows:
 
-`pnpm run db:introspect`
+      ![Alt text](docs/20231219-160217.png)
 
-It will automatically updates `packages/backend/src/core/schema.ts` to the latest schema based on the latest tables of the database.
+4.  `config.ts` (`packages/shared/config.ts`). The config shared between the log viewer and the cron server.
 
-<h1 id="2-project-general">2. Project General <a href="#table-of-contents">🔼</a></h1>
+    - There are only one setting `CONFIG.API_SERVER_PORT`. The port the cron server will be running at. This port is also used by `log-viewer` to reference the server in the API URL.
 
-### Requirements
+5.  `ecosystem.config.js` (`packages/cron/ecosystem.config.js`). Configure based on `ecosystem.config.example.js`.
 
-- NVM or node v18.12.1
-- pnpm v7.15.0
+    - This is the PM2 config file.
 
-### Setup
+## Deployment
 
-Environment variables need to be setup.
+1. Git fetch the repo from the server.
+2. Specify the configuration.
+3. Build the front-end. From the directory `packages/log-viewer`, run command `pnpm run build`. The build will be outputted at `packages/log-viewer/dist/`. Serve this directory statically from NGINX.
+4. Build the back-end. From the directory `packages/cron`, Run command `pnpm run build`, then try running it with `pnpm run start`. If it runs, run it with PM2 using `pm2 start ecosystem.config.js` command at the `packages/cron` directory.
 
-```bash
-# From ./ (root directory)
+## Resources
 
-# React Frontend
-cp ./packages/react/.env.local.example ./packages/react/.env.local;
-
-# tRPC Backend
-cp ./packages/trpc/.env.example ./packages/trpc/.env;
-```
-
-Install & start entire application:
-
-```bash
-pnpm install;
-pnpm run dev;
-```
+- [StackOverflow - tsc doesn't compile alias paths](https://stackoverflow.com/questions/59179787/tsc-doesnt-compile-alias-paths)
